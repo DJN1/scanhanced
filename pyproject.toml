@@ -1,0 +1,48 @@
+[tool.poetry]
+name = "nmap-vuln-search"
+version = "0.1.0"
+description = ""
+authors = ["David Niederweis <david.niederweis@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "nmap_vuln_search"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+python3-nmap = "^1.6.0"
+nvdlib = "^0.7.1"
+
+[tool.poetry.group.dev.dependencies]
+flake8 = "^6.0.0"
+bandit = "^1.7.4"
+vulture = "^2.7"
+black = "^23.1.0"
+reorder-python-imports = "^3.9.0"
+interrogate = "^1.5.0"
+flake8-docstrings = "^1.7.0"
+flake8-quotes = "^3.3.2"
+flake8-variables-names = "^0.0.5"
+
+[tool.black]
+line-length = 79
+exclude = '''
+/(
+    \.git
+  | \.vscode
+  | \.mypy_cache
+  | \.pytest_cache
+  | build
+  | dist
+)/
+'''
+
+[tool.vulture]
+make_whitelist = true
+min_confidence = 100
+paths = ["src"]
+sort_by_size = true
+verbose = true
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
