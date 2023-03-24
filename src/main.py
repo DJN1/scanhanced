@@ -19,6 +19,7 @@ def main():
         description="Scans given address for versions and scrapes vulnerabilties for found versions",
     )
     parser.add_argument("address", type=str)
+    parser.add_argument("-v", "--verbose", dest="verbose", action="store_true")
     args = parser.parse_args()
     print("starting nmap")
     nmap = Nmap()
@@ -34,10 +35,11 @@ def main():
         if "version" in result["service"] and len(result["cpe"]) != 0:
             if "version" in result["service"]:
                 service_name = result["service"]["product"]
-                print(service_name)
                 service_version = result["service"]["version"][
                     0 : result["service"]["version"].find(" ", 0, -1)
                 ]
+                if args.verbose:
+                    print(f"Found Service: {service_name} {service_version}")
                 service_cpe = result["cpe"][0]["cpe"]
             service_list.append(
                 {
@@ -66,7 +68,8 @@ def main():
                 headers=EXPLOITDB_HEADERS,
             )
             if res.status_code == 200 and len(res.json()["data"]) > 0:
-                print("FOUND EXPLOIT")
+                if args.verbose:
+                    print(f"Found exploit for {cve}")
                 for exploit in res.json()["data"]:
                     service_exploits.append(
                         {
@@ -75,7 +78,8 @@ def main():
                         }
                     )
             else:
-                print(f"{res.status_code} | {len(res.json()['data'])}")
+                if args.verbose:
+                    print(f"No exploits found for {cve}")
             sleep(1)
     print(service_exploits)
 
