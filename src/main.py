@@ -1,10 +1,12 @@
 import argparse
 import json
+from datetime import datetime
 from enum import Enum
 from time import sleep
 
 import nvdlib
 import requests
+from dict2xml import dict2xml
 from nmap3 import Nmap
 
 
@@ -62,9 +64,9 @@ def main():
             if "version" in result["service"] and len(result["cpe"]) != 0:
                 if "version" in result["service"]:
                     service_name = result["service"]["product"]
-                    service_version = result["service"]["version"][
-                        0 : result["service"]["version"].find(" ", 0, -1)
-                    ]
+                    service_version = result["service"]["version"]
+                    if " " in service_version:
+                        service_version = service_version.split(" ")[0]
                     if args.verbose:
                         print(
                             f"Found Service: {service_name} {service_version}"
@@ -75,12 +77,13 @@ def main():
                         "service_name": service_name,
                         "version": service_version,
                         "cpe": service_cpe,
+                        "port": result["portid"],
                     }
                 )
         for service in service_list:
             exploit_search_results[host][
                 f"{service['service_name']} {service['version']}"
-            ] = {}
+            ] = {"port": service["port"]}
         service_exploits = []
         for service in service_list:
             cpe_search_term = (
@@ -123,8 +126,31 @@ def main():
                     if args.verbose:
                         print(f"No exploits found for {cve}")
                 sleep(1)
-        # print(service_exploits)
+        if args.output:
+            output(exploit_search_results, args.output)
         print(exploit_search_results)
+
+
+def output(results, format):
+    if format == OutputFormat.XML.value:
+        filename = str(datetime.now()).replace(" ", "_") + "-exploits.xml"
+        with open(filename, "w") as f:
+            f.write(dict2xml(results))
+    elif format == OutputFormat.JSON.value:
+        filename = str(datetime.now()).replace(" ", "_") + "-exploits.json"
+        json.dump(results, open(filename, "w"))
+    elif format == OutputFormat.CSV.value:
+        filename = str(datetime.now()).replace(" ", "_") + "-exploits.csv"
+        with open(filename, "w") as f:
+            for host in results.keys():
+                for service in results[host].keys():
+                    for cve in results[host][service].keys():
+                        for exploit in results[host][service][cve]:
+                            f.write(
+                                f"{host},{service.replace(' ', '_')},{cve},{exploit}\n"
+                            )
+    else:
+        pass
 
 
 if __name__ == "__main__":

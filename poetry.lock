@@ -98,6 +98,17 @@ optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7"
 
 [[package]]
+name = "dict2xml"
+version = "1.7.3"
+description = "Small utility to convert a python dictionary into an XML string"
+category = "main"
+optional = false
+python-versions = ">=3.5"
+
+[package.extras]
+tests = ["noseofyeti[black] (==2.4.1)", "pytest (==7.2.1)"]
+
+[[package]]
 name = "flake8"
 version = "6.0.0"
 description = "the modular source code checker: pep8 pyflakes and co"
@@ -434,7 +445,7 @@ toml = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "36f96e179bfd88e2814eadec2f973b6983c413ba7fd934dbdc848b9f13cff97b"
+content-hash = "b7d622e5228c73b85a8dc615f512d69fa0188ab19429d22f1dcb107ebfad9323"
 
 [metadata.files]
 attrs = [
@@ -564,6 +575,10 @@ click = [
 colorama = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
+]
+dict2xml = [
+    {file = "dict2xml-1.7.3-py3-none-any.whl", hash = "sha256:f849e1aec277f93d087482461b6b8afdde61df346918298aca4c42bcf9895f6d"},
+    {file = "dict2xml-1.7.3.tar.gz", hash = "sha256:02a5c198d0fecdfeb52644e9d905200a36c031e11c201362d7d217df684bc15d"},
 ]
 flake8 = [
     {file = "flake8-6.0.0-py2.py3-none-any.whl", hash = "sha256:3833794e27ff64ea4e9cf5d410082a8b97ff1a06c16aa3d2027339cd0f1195c7"},
