@@ -128,7 +128,22 @@ def main():
                 sleep(1)
         if args.output:
             output(exploit_search_results, args.output)
-        print(exploit_search_results)
+        for host in exploit_search_results.keys():
+            print(host)
+            for service in exploit_search_results[host].keys():
+                printed = False
+                for cve in exploit_search_results[host][service].keys():
+                    if not printed:
+                        print(
+                            f"\t{service} - Port: {exploit_search_results[host][service]['port']}"
+                        )
+                        printed = True
+                    if cve != "port" and len(exploit_search_results[host][service][cve]) > 0:
+                        print(f"\t\t{cve}")
+                        for exploit in exploit_search_results[host][service][
+                            cve
+                        ]:
+                            print(f"\t\t\t{exploit}")
 
 
 def output(results, format):
