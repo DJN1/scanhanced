@@ -45,8 +45,9 @@ def main():
     )
     args = parser.parse_args()
     print("starting nmap")
+
     nmap = Nmap()
-    results = nmap.nmap_version_detection(args.address)
+    results = nmap.nmap_version_detection(args.address, args="-Pn")
     host_list = [
         host
         for host in results.keys()
