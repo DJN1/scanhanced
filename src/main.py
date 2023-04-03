@@ -123,9 +123,15 @@ def main():
         choices=[enum.value for enum in OutputFormat],
         help="generate output file in specified format",
     )
+    parser.add_argument(
+        "-s",
+        "--save-output",
+        dest="save_output",
+        action="store_true",
+        help="save console output to file",
+    )
     args = parser.parse_args()
     host_list, results = run_nmap_version_scan(args.address, args.verbose)
-
     exploit_search_results = {}
     for host in host_list:
         exploit_search_results[host] = {}
@@ -155,24 +161,29 @@ def main():
         if args.output:
             output(exploit_search_results, args.output)
         for host in exploit_search_results.keys():
-            print(host)
+            output_str = f"{host}\n"
             for service in exploit_search_results[host].keys():
                 printed = False
                 for cve in exploit_search_results[host][service].keys():
                     if not printed:
-                        print(
-                            f"\t{service} - Port: {exploit_search_results[host][service]['port']}"
-                        )
+                        output_str += f"\t{service} - Port: {exploit_search_results[host][service]['port']}\n"
                         printed = True
                     if (
                         cve != "port"
                         and len(exploit_search_results[host][service][cve]) > 0
                     ):
-                        print(f"\t\t{cve}")
+                        output_str += f"\t\t{cve}\n"
                         for exploit in exploit_search_results[host][service][
                             cve
                         ]:
-                            print(f"\t\t\t{exploit}")
+                            output_str += f"\t\t\t{exploit}\n"
+                output_str += "\n"
+            print(output_str)
+            if args.save_output:
+                with open(
+                    f"nvs-{args.address.replace('.', '_')}-output.txt", "a"
+                ) as f:
+                    f.write(output_str)
 
 
 def output(results, format):

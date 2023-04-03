@@ -132,3 +132,4 @@ dmypy.json
 *.json
 *.xml
 *.csv
+nvs-*-output.txt
