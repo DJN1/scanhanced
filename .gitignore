@@ -133,3 +133,4 @@ dmypy.json
 *.xml
 *.csv
 nvs-*-output.txt
+exploits/
