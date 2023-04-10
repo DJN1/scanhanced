@@ -134,3 +134,4 @@ dmypy.json
 *.csv
 nvs-*-output.txt
 exploits/
+binaries/

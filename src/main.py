@@ -46,9 +46,9 @@ def get_cpes_from_service(
         cpe_search_term = f"cpe:2.3:a:{service_cpe.replace('cpe:/a:', '')}"
     if "/o" in service_cpe:
         cpe_search_term = f"cpe:2.3:o:{service_cpe.replace('cpe:/o:', '')}"
-    if service_name == "OpenSSH" and "p" in service_version:
-        p_index = cpe_search_term.index("p", -4, -1)
-        cpe_search_term = cpe_search_term[:p_index]
+    if service_name == "OpenSSH" and "1p" in service_version:
+        p_index = cpe_search_term.index("1p", -4, -1)
+        cpe_search_term = cpe_search_term[:p_index - 1]
     if service_name == "nginx" and "igor_sysoev" in service_cpe:
         cpe_search_term = cpe_search_term.replace("igor_sysoev", "f5")
     if verbose:
@@ -62,7 +62,7 @@ def get_cpes_from_service(
 
 
 def get_exploits_for_cves(
-    service_str: str, host: str, cve_list: list, download: bool, verbose: bool
+        service_str: str, host: str, cve_list: list, download: bool, download_app: bool, verbose: bool
 ) -> dict:
     service_exploits = {}
     for cve in cve_list:
@@ -73,7 +73,6 @@ def get_exploits_for_cves(
             headers=EXPLOITDB_HEADERS,
         )
         if res.status_code == 200 and len(res.json()["data"]) > 0:
-            # print(res.json()["data"])
             for exploit in res.json()["data"]:
                 exploit_url = (
                     f"https://www.exploit-db.com/exploits/{exploit['id']}"
@@ -90,6 +89,22 @@ def get_exploits_for_cves(
                             exploit_obj["metasploit"] = False
                 else:
                     exploit_obj["metasploit"] = False
+                if download_app and exploit["application_path"] != "":
+                    link = exploit["application_md5"]
+                    binary_url = "https://exploit-db.com" + link[link.find('"') + 1: link.find('>') - 1]
+                    if not os.path.exists(f"binaries/{host}/{exploit['application_path']}"):
+                        if verbose:
+                            print(f"Downloading vulnerable app: {exploit['application_path']}...")
+                        binary_res = requests.get(binary_url, headers=EXPLOITDB_HEADERS)
+                        if binary_res.status_code == 200:
+                            if not os.path.exists(f"binaries/{host}"):
+                                os.makedirs(f"binaries/{host}")
+                            with open(f"binaries/{host}/{exploit['application_path']}", "wb") as f:
+                                f.write(binary_res.content)
+                    else:
+                        if verbose:
+                            print(f"Vulnerable app already exists: binaries/{host}/{exploit['application_path']}")
+
                 if verbose:
                     print(
                         f"Found {'verified ' if exploit['verified'] else ''}exploit{'(Metasploit)' if exploit_obj['metasploit'] else ''} for {cve}"
@@ -189,6 +204,13 @@ def main():
         action="store_true",
         help="download found exploits",
     )
+    parser.add_argument(
+        "-b",
+        "--download-binary",
+        dest="download_app",
+        action="store_true",
+        help="download vulnerable binary if available",
+    )
     args = parser.parse_args()
     host_list, results = run_nmap_version_scan(args.address, args.verbose)
     exploit_search_results = {}
@@ -222,19 +244,21 @@ def main():
                         host,
                         service_cves,
                         args.download,
+                        args.download_app,
                         args.verbose,
                     )
                 )
         if args.output:
             output(exploit_search_results, args.output)
         for host in exploit_search_results.keys():
-            output_str = f"{host}\n"
+            output_str = "POTENTIAL VULNERABILITIES AND EXPLOITS FOUND:\n"
+            output_str += f"{host}\n"
             if len(exploit_search_results[host].keys()) == 0:
                 output_str += "\tNo vulnerabilities found\n"
             else:
                 for service in exploit_search_results[host].keys():
                     printed = False
-                    if len(exploit_search_results[host][service].keys()) == 0:
+                    if len(exploit_search_results[host][service].keys()) == 1:
                         output_str += f"\t{service} - Port: {exploit_search_results[host][service]['port']}\n"
                         output_str += "\t\tNo vulnerabilities found\n"
                     else:
