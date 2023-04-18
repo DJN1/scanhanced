@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "nmap-vuln-search"
+name = "scanhanced"
 version = "0.1.0"
 description = ""
 authors = ["David Niederweis <david.niederweis@gmail.com>"]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "nmap_vuln_search"}]
+packages = [{include = "scanhanced"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
