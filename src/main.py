@@ -24,17 +24,13 @@ EXPLOITDB_HEADERS = {
 }
 
 
-def run_nmap_version_scan(
-    address: str, verbose: bool = False
-) -> tuple[list, dict]:
+def run_nmap_version_scan(address: str, verbose: bool = False) -> tuple[list, dict]:
     if verbose:
         print(f"Scanning {address} for open ports and versions")
     nmap = Nmap()
     results = nmap.nmap_version_detection(address, args="-Pn")
     host_list = [
-        host
-        for host in results.keys()
-        if host not in ["runtime", "stats", "task_results"]
+        host for host in results.keys() if host not in ["runtime", "stats", "task_results"]
     ]
     return host_list, results
 
@@ -48,13 +44,11 @@ def get_cpes_from_service(
         cpe_search_term = f"cpe:2.3:o:{service_cpe.replace('cpe:/o:', '')}"
     if service_name == "OpenSSH" and "1p" in service_version:
         p_index = cpe_search_term.index("1p", -4, -1)
-        cpe_search_term = cpe_search_term[:p_index - 1]
+        cpe_search_term = cpe_search_term[: p_index - 1]
     if service_name == "nginx" and "igor_sysoev" in service_cpe:
         cpe_search_term = cpe_search_term.replace("igor_sysoev", "f5")
     if verbose:
-        print(
-            f"Searching for CPE for {service_name} {service_version} with CPE {cpe_search_term}"
-        )
+        print(f"Searching for CPE for {service_name} {service_version} with CPE {cpe_search_term}")
     service_cpe = nvdlib.searchCPE(cpeMatchString=cpe_search_term)
     if len(service_cpe) == 0:
         return ""
@@ -62,7 +56,12 @@ def get_cpes_from_service(
 
 
 def get_exploits_for_cves(
-        service_str: str, host: str, cve_list: list, download: bool, download_app: bool, verbose: bool
+    service_str: str,
+    host: str,
+    cve_list: list,
+    download: bool,
+    download_app: bool,
+    verbose: bool,
 ) -> dict:
     service_exploits = {}
     for cve in cve_list:
@@ -74,9 +73,7 @@ def get_exploits_for_cves(
         )
         if res.status_code == 200 and len(res.json()["data"]) > 0:
             for exploit in res.json()["data"]:
-                exploit_url = (
-                    f"https://www.exploit-db.com/exploits/{exploit['id']}"
-                )
+                exploit_url = f"https://www.exploit-db.com/exploits/{exploit['id']}"
                 exploit_obj = {
                     "url": exploit_url,
                     "verified": bool(exploit["verified"]),
@@ -91,7 +88,9 @@ def get_exploits_for_cves(
                     exploit_obj["metasploit"] = False
                 if download_app and exploit["application_path"] != "":
                     link = exploit["application_md5"]
-                    binary_url = "https://exploit-db.com" + link[link.find('"') + 1: link.find('>') - 1]
+                    binary_url = (
+                        "https://exploit-db.com" + link[link.find('"') + 1 : link.find(">") - 1]
+                    )
                     if not os.path.exists(f"binaries/{host}/{exploit['application_path']}"):
                         if verbose:
                             print(f"Downloading vulnerable app: {exploit['application_path']}...")
@@ -99,15 +98,22 @@ def get_exploits_for_cves(
                         if binary_res.status_code == 200:
                             if not os.path.exists(f"binaries/{host}"):
                                 os.makedirs(f"binaries/{host}")
-                            with open(f"binaries/{host}/{exploit['application_path']}", "wb") as f:
+                            with open(
+                                f"binaries/{host}/{exploit['application_path']}",
+                                "wb",
+                            ) as f:
                                 f.write(binary_res.content)
                     else:
                         if verbose:
-                            print(f"Vulnerable app already exists: binaries/{host}/{exploit['application_path']}")
+                            print(
+                                "Vulnerable app already exists: binaries/"
+                                f"{host}/{exploit['application_path']}",
+                            )
 
                 if verbose:
                     print(
-                        f"Found {'verified ' if exploit['verified'] else ''}exploit{'(Metasploit)' if exploit_obj['metasploit'] else ''} for {cve}"
+                        f"Found {'verified ' if exploit['verified'] else ''}"
+                        f"exploit{'(Metasploit)' if exploit_obj['metasploit'] else ''} for {cve}"
                     )
 
                 service_exploits[cve].append(exploit_obj)
@@ -173,7 +179,8 @@ def download_exploits(exploit_id: str, cve: str, verbose: bool):
 def main():
     parser = argparse.ArgumentParser(
         prog="NVS",
-        description="Scans given address for versions and scrapes vulnerabilties for found versions",
+        description="Scans given address for versions and scrapes \
+                vulnerabilties for found versions",
     )
     parser.add_argument("address", type=str, help="the address to scan")
     parser.add_argument(
@@ -219,9 +226,9 @@ def main():
         results_list = results[host]["ports"]
         service_list = get_service_list_for_host(results_list, args.verbose)
         for service in service_list:
-            exploit_search_results[host][
-                f"{service['service_name']} {service['version']}"
-            ] = {"port": service["port"]}
+            exploit_search_results[host][f"{service['service_name']} {service['version']}"] = {
+                "port": service["port"]
+            }
         for service in service_list:
             service_cpe_name = get_cpes_from_service(
                 service["service_name"],
@@ -232,10 +239,7 @@ def main():
             if service_cpe_name == "":
                 pass
             else:
-                service_cves = [
-                    cve.id
-                    for cve in nvdlib.searchCVE(cpeName=service_cpe_name)
-                ]
+                service_cves = [cve.id for cve in nvdlib.searchCVE(cpeName=service_cpe_name)]
                 exploit_search_results[host][
                     f"{service['service_name']} {service['version']}"
                 ].update(
@@ -259,36 +263,32 @@ def main():
                 for service in exploit_search_results[host].keys():
                     printed = False
                     if len(exploit_search_results[host][service].keys()) == 1:
-                        output_str += f"\t{service} - Port: {exploit_search_results[host][service]['port']}\n"
+                        output_str += (
+                            f"\t{service} - Port: {exploit_search_results[host][service]['port']}\n"
+                        )
                         output_str += "\t\tNo vulnerabilities found\n"
                     else:
-                        for cve in exploit_search_results[host][
-                            service
-                        ].keys():
+                        for cve in exploit_search_results[host][service].keys():
                             if not printed:
-                                output_str += f"\t{service} - Port: {exploit_search_results[host][service]['port']}\n"
+                                output_str += f"\t{service} - Port: "
+                                output_str += f"{exploit_search_results[host][service]['port']}\n"
                                 printed = True
                             if (
                                 cve != "port"
-                                and len(
-                                    exploit_search_results[host][service][cve]
-                                )
-                                > 0
+                                and len(exploit_search_results[host][service][cve]) > 0
                             ):
                                 output_str += f"\t\t{cve}\n"
-                                for exploit in exploit_search_results[host][
-                                    service
-                                ][cve]:
-                                    output_str += f"\t\t\t{exploit['url']}{' (Metasploit)' if exploit['metasploit'] else ''}"
+                                for exploit in exploit_search_results[host][service][cve]:
+                                    output_str += f"\t\t\t{exploit['url']} "
+                                    if exploit["metasploit"]:
+                                        output_str += "(Metasploit)"
                                     if exploit["verified"]:
                                         output_str += " - Verified"
                                     output_str += "\n"
                     output_str += "\n"
             print(output_str)
             if args.save_output:
-                with open(
-                    f"nvs-{args.address.replace('.', '_')}-output.txt", "a"
-                ) as f:
+                with open(f"nvs-{args.address.replace('.', '_')}-output.txt", "a") as f:
                     f.write(output_str)
 
 
@@ -307,9 +307,7 @@ def output(results, format):
                 for service in results[host].keys():
                     for cve in results[host][service].keys():
                         for exploit in results[host][service][cve]:
-                            f.write(
-                                f"{host},{service.replace(' ', '_')},{cve},{exploit['url']}\n"
-                            )
+                            f.write(f"{host},{service.replace(' ', '_')},{cve},{exploit['url']}\n")
     else:
         pass
 
