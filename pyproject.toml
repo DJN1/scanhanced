@@ -2,7 +2,7 @@
 name = "scanhanced"
 version = "0.1.0"
 description = ""
-authors = ["David Niederweis <david.niederweis@gmail.com>"]
+authors = ["David Niederweis <david.niederweis@protonmail.com>"]
 license = "MIT"
 readme = "README.md"
 packages = [{include = "scanhanced"}]
